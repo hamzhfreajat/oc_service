@@ -12,7 +12,8 @@ app = FastAPI(title="OCR Watermark Service")
 
 # Load model globally on startup (downloads weights if missing)
 logger.info("Loading EasyOCR Model...")
-READER = easyocr.Reader(['en', 'ar'], gpu=False)
+# Use quantize=True for significantly faster CPU inference
+READER = easyocr.Reader(['en', 'ar'], gpu=False, quantize=True)
 logger.info("EasyOCR Model loaded successfully.")
 
 @app.get("/health")
@@ -31,6 +32,11 @@ async def detect_watermark(file: UploadFile = File(...)):
     try:
         content = await file.read()
         img = Image.open(io.BytesIO(content)).convert('RGB')
+        
+        # Resize image to speed up CPU inference dramatically
+        # 800x800 is enough to read watermarks effectively
+        img.thumbnail((800, 800))
+        
         img_np = np.array(img)
         
         # Read text from image
