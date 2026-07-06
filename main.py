@@ -48,7 +48,7 @@ async def detect_watermark(file: UploadFile = File(...)):
         # Keywords common in real estate watermarks
         watermark_keywords = [
             "شركة", "مؤسسة", "عقارية", "عقارات", "خدمات", "للخدمات", 
-            "إسكان", "استثمار", "المصري", "العويلي", "مكتب", "للاستثمارات", "للعقارات"
+            "إسكان", "استثمار", "المصري", "العويلي", "الدويك", "مكتب", "للاستثمارات", "للعقارات"
         ]
         
         for (bbox, text, prob) in results:
