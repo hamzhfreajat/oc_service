@@ -45,10 +45,21 @@ async def detect_watermark(file: UploadFile = File(...)):
         detections = []
         has_watermark = False
         
+        # Keywords common in real estate watermarks
+        watermark_keywords = [
+            "شركة", "مؤسسة", "عقارية", "عقارات", "خدمات", "للخدمات", 
+            "إسكان", "استثمار", "المصري", "العويلي", "مكتب", "للاستثمارات", "للعقارات"
+        ]
+        
         for (bbox, text, prob) in results:
             clean_text = text.strip()
-            # If we find highly confident, decent-sized text, we flag it as a watermark
-            if prob > 0.6 and len(clean_text) >= 4:
+            
+            # Check if any known watermark keyword is in the detected text
+            has_keyword = any(kw in clean_text for kw in watermark_keywords)
+            
+            # If it has a known keyword, we trust it even with very low confidence
+            # Otherwise, require higher confidence and decent length
+            if (has_keyword and prob > 0.2) or (prob > 0.6 and len(clean_text) >= 4):
                 has_watermark = True
                 detections.append({"text": clean_text, "prob": float(prob)})
                 
