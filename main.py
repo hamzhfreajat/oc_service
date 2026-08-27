@@ -20,6 +20,11 @@ logger.info("EasyOCR Model loaded successfully.")
 def health():
     return {"status": "ok"}
 
+import asyncio
+
+# Prevent concurrent PyTorch execution which causes CPU/RAM spikes and OOM crashes
+ocr_lock = asyncio.Lock()
+
 @app.post("/api/detect")
 async def detect_watermark(file: UploadFile = File(...)):
     """
@@ -39,8 +44,10 @@ async def detect_watermark(file: UploadFile = File(...)):
         
         img_np = np.array(img)
         
-        # Read text from image
-        results = READER.readtext(img_np)
+        # Read text from image sequentially to avoid OOM
+        async with ocr_lock:
+            # Offload blocking PyTorch call to a thread to prevent freezing the event loop
+            results = await asyncio.to_thread(READER.readtext, img_np)
         
         detections = []
         has_watermark = False
